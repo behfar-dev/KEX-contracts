@@ -14,7 +14,7 @@ const gasPrice = 0;
         if (!fs.existsSync(path.resolve(__dirname, './deployedUpdated.json'))) {
             fs.writeFileSync(path.resolve(__dirname, './deployedUpdated.json'), JSON.stringify({
                 "5464": {
-                    ownerAdddress: "0xA7A6395Cf611D260357b611D91bf702e99d14dD2"
+                    ownerAdddress: "0x7db54A526d40e30Df3CbdACb90AdFC4a5359618D"
                 }
             }, null, 4));
         }
@@ -22,7 +22,7 @@ const gasPrice = 0;
         let chainId = await ethers.provider.getNetwork();
         if (!addresse[chainId.chainId]) {
             addresse[chainId.chainId] = {
-                ownerAdddress: "0xA7A6395Cf611D260357b611D91bf702e99d14dD2"
+                ownerAdddress: "0x7db54A526d40e30Df3CbdACb90AdFC4a5359618D"
             }
         }
         let chainAddresses = addresse[chainId.chainId];
@@ -30,7 +30,7 @@ const gasPrice = 0;
         if (verify) {
             await verifyStuff(chainAddresses);
         }
-        fs.writeFileSync(path.resolve(__dirname, './deployedUpdated2.json'), JSON.stringify(addresse, null, 4));
+        fs.writeFileSync(path.resolve(__dirname, './deployedUpdated.json'), JSON.stringify(addresse, null, 4));
 
     } catch (e) {
         console.log(e);
@@ -40,21 +40,21 @@ const gasPrice = 0;
 export async function deployStuff(contracts: any) {
     if (!await deployFfactory(contracts)) return;
     if (!await initializeFfactory(contracts)) return;
-    if (!await deployAssetToken(contracts)) return;
+    // if (!await deployAssetToken(contracts)) return;
     if (!await deployRouter(contracts)) return;
     if (!await initializeRouter(contracts)) return;
     if (!await deployAgentToken(contracts)) return;
-    if (!await deployERC6551(contracts)) return;
-    if (!await deployAgentNftV2(contracts)) return;
-    if (!await initializeAgentNft(contracts)) return;
-    if (!await deployAgentFactoryV3V3(contracts)) return;
-    if (!await initializeAgentFactory(contracts)) return;
-    if (!await deployBonding(contracts)) return;
-    if (!await initializeBonding(contracts)) return;
-    if (!await agentFactoryConfigurations(contracts)) return;
-    if (!await fFactoryConfigurations(contracts)) return;
-    if (!await launch(contracts)) return;
-    if (!await buy(contracts)) return;
+    // if (!await deployERC6551(contracts)) return;
+    // if (!await deployAgentNftV2(contracts)) return;
+    // if (!await initializeAgentNft(contracts)) return;
+    // if (!await deployAgentFactoryV3V3(contracts)) return;
+    // if (!await initializeAgentFactory(contracts)) return;
+    // if (!await deployBonding(contracts)) return;
+    // if (!await initializeBonding(contracts)) return;
+    // if (!await agentFactoryConfigurations(contracts)) return;
+    // if (!await fFactoryConfigurations(contracts)) return;
+    // if (!await launch(contracts)) return;
+    // if (!await buy(contracts)) return;
 }
 
 export async function buy(contracts: any) {
@@ -546,14 +546,15 @@ export async function initializeFfactory(contracts: any) {
             console.log("FFactory not deployed");
             return false;
         }
+        console.log("Initializing FFactory", contracts.FFactory, contracts.feeReciever);
         const fFactory = await ethers.getContractFactory("FFactory");
         const fFactoryInstance = await fFactory.attach(contracts.FFactory);
         let taxValut = await fFactoryInstance.taxVault()
         if (taxValut === address0) {
             await fFactoryInstance.initialize(
-                contracts.ownerAdddress,
-                0,
-                0,
+                contracts.feeReciever,
+                1,
+                1,
                 {
                     gasPrice
                 }

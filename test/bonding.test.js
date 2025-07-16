@@ -32,7 +32,7 @@ describe("Bonding", function () {
 
         FFactory = await ethers.getContractFactory("FFactory");
         fFactory = await FFactory.connect(deployer).deploy();
-        await fFactory.connect(deployer).initialize(ownerAdddress, 0, 0);
+        await fFactory.connect(deployer).initialize(ownerAdddress, 1, 1);
 
         FRouter = await ethers.getContractFactory("FRouter");
         fRouter = await FRouter.connect(deployer).deploy();
@@ -43,7 +43,9 @@ describe("Bonding", function () {
 
         TBA = await ethers.getContractFactory("ERC6551Registry");
         tba = await TBA.connect(deployer).deploy();
-        // tba = await TBA.connect(deployer).deploy();
+        tba = await TBA.connect(deployer).deploy();
+        tba = await TBA.connect(deployer).deploy();
+        tba = await TBA.connect(deployer).deploy();
         AgentNFT = await ethers.getContractFactory("AgentNftV2");
         agentNFT = await AgentNFT.connect(deployer).deploy();
         await agentNFT.connect(deployer).initialize(

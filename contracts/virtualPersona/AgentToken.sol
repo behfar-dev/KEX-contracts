@@ -215,10 +215,15 @@ contract AgentToken is
      * @return uniswapV2Pair_ The pair address
      */
     function _createPair() internal returns (address uniswapV2Pair_) {
+        address a0 = address(this);
+        address a1 = pairToken;
+        if (a0 > a1) {
+            (a0, a1) = (a1, a0);
+        }
         address pool = _nonfungiblePositionManager
             .createAndInitializePoolIfNecessary(
-                address(this),
-                pairToken,
+                a0,
+                a1,
                 100,
                 79228162514264337593543950336
             );
@@ -272,16 +277,20 @@ contract AgentToken is
             address(_nonfungiblePositionManager),
             type(uint256).max
         );
-
+        address a0 = address(this);
+        address a1 = pairToken;
+        if (a0 > a1) {
+            (a0, a1) = (a1, a0);
+        }
         // Add the liquidity:
         MintParams memory p = MintParams({
-            token0: address(this),
-            token1: pairToken,
+            token0: a0,
+            token1: a1,
             fee: 100,
             tickLower: -887272,
             tickUpper: 887272,
-            amount0Desired: balanceOf(address(this)),
-            amount1Desired: IERC20(pairToken).balanceOf(address(this)),
+            amount0Desired: IERC20(a0).balanceOf(address(this)),
+            amount1Desired: IERC20(a1).balanceOf(address(this)),
             amount0Min: 0,
             amount1Min: 0,
             recipient: lpOwner,
