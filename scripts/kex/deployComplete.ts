@@ -50,7 +50,7 @@ const NETWORK_CONFIG: any = {
 
 // Deployment parameters
 const DEPLOYMENT_PARAMS = {
-    // Asset token (USDT) parameters
+    // Asset token (USDT/USDC) parameters
     assetTokenName: "USDT-Kex Test",
     assetTokenSymbol: "KEX_USDT",
 
@@ -58,8 +58,8 @@ const DEPLOYMENT_PARAMS = {
     buyTax: 0,
     sellTax: 0,
 
-    // Bonding parameters
-    fee: "100000000000000000000", // 100 USDT
+    // Bonding parameters - CRITICAL: Adjust for USDC on Base mainnet (6 decimals)
+    fee: "100000000", // 100 USDC (6 decimals) for Base mainnet, use "100000000000000000000" (18 decimals) for testnet
     initialSupply: "1000000000", // 1 billion tokens
     assetRate: "5000", // 0.5% (5000/10000)
     maxTx: 100,
@@ -70,6 +70,9 @@ const DEPLOYMENT_PARAMS = {
     maturityDuration: 0,
     nextId: 0
 };
+
+// BASE Mainnet USDC address (6 decimals)
+const BASE_MAINNET_USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 
 interface DeployedAddresses {
     ownerAddress?: string;
@@ -125,23 +128,35 @@ async function main() {
     const deployOptions = config.gasPrice !== undefined ? { gasPrice: config.gasPrice } : {};
 
     // ==============================================
-    // STEP 1: Deploy Asset Token (USDT)
+    // STEP 1: Set Asset Token (USDC for mainnet, deploy test token for testnet)
     // ==============================================
     if (!deployed.assetToken) {
-        console.log("📝 Step 1: Deploying Asset Token (USDT)...");
-        const TestERC20 = await ethers.getContractFactory("TestERC20");
-        const assetToken = await TestERC20.deploy(
-            DEPLOYMENT_PARAMS.assetTokenName,
-            DEPLOYMENT_PARAMS.assetTokenSymbol,
-            deployOptions
-        );
-        await assetToken.waitForDeployment();
-        deployed.assetToken = await assetToken.getAddress();
-        console.log(`✅ Asset Token deployed: ${deployed.assetToken}\n`);
-        saveDeployment(deployed);
-        await verify(deployed.assetToken, [DEPLOYMENT_PARAMS.assetTokenName, DEPLOYMENT_PARAMS.assetTokenSymbol], config.verificationDelay);
+        if (network === "base") {
+            // BASE MAINNET: Use existing USDC
+            console.log("📝 Step 1: Using existing USDC on Base mainnet...");
+            deployed.assetToken = BASE_MAINNET_USDC;
+            console.log(`✅ Asset Token (USDC): ${deployed.assetToken}`);
+            console.log(`   Decimals: 6`);
+            console.log(`   ⚠️  Make sure fee parameter is adjusted for 6 decimals!\n`);
+            saveDeployment(deployed);
+        } else {
+            // TESTNET: Deploy test token
+            console.log("📝 Step 1: Deploying Test Asset Token (USDT)...");
+            const TestERC20 = await ethers.getContractFactory("TestERC20");
+            const assetToken = await TestERC20.deploy(
+                DEPLOYMENT_PARAMS.assetTokenName,
+                DEPLOYMENT_PARAMS.assetTokenSymbol,
+                deployOptions
+            );
+            await assetToken.waitForDeployment();
+            deployed.assetToken = await assetToken.getAddress();
+            console.log(`✅ Asset Token deployed: ${deployed.assetToken}`);
+            console.log(`   Decimals: 18\n`);
+            saveDeployment(deployed);
+            await verify(deployed.assetToken, [DEPLOYMENT_PARAMS.assetTokenName, DEPLOYMENT_PARAMS.assetTokenSymbol], config.verificationDelay);
+        }
     } else {
-        console.log(`✓ Asset Token already deployed: ${deployed.assetToken}\n`);
+        console.log(`✓ Asset Token already set: ${deployed.assetToken}\n`);
     }
 
     // ==============================================
@@ -516,7 +531,8 @@ async function main() {
     console.log(`  Uniswap V3 Position Mgr:    ${config.uniswapV3PositionManager}\n`);
 
     console.log("Configuration:");
-    console.log(`  Launch Fee:                 ${DEPLOYMENT_PARAMS.fee} wei (100 USDT)`);
+    const feeDisplay = network === "base" ? "100 USDC (6 decimals)" : "100 USDT (18 decimals)";
+    console.log(`  Launch Fee:                 ${DEPLOYMENT_PARAMS.fee} wei (${feeDisplay})`);
     console.log(`  Initial Supply:             ${DEPLOYMENT_PARAMS.initialSupply} tokens`);
     console.log(`  Asset Rate:                 ${DEPLOYMENT_PARAMS.assetRate} (0.5%)`);
     console.log(`  Graduation Threshold:       ${DEPLOYMENT_PARAMS.gradThreshold} tokens (125M)\n`);
